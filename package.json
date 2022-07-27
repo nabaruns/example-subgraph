@@ -6,6 +6,7 @@
   "scripts": {
     "prepare:cosmoshub": "mustache config/cosmoshub.json subgraph.template.yaml > subgraph.yaml",
     "prepare:osmosis": "mustache config/osmosis.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:persistence": "mustache config/persistence.json subgraph.template.yaml > subgraph.yaml",
     "codegen": "graph codegen",
     "build": "graph build",
     "create-local": "graph create cosmos-validator-rewards --node http://0.0.0.0:8020",
