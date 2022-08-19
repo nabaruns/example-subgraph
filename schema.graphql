@@ -1,5 +1,8 @@
-type Reward @entity {
+type Event @entity {
   id: ID!
-  amount: String
-  validator: String
+  type: String!
+  contract_address: String!
+  transaction: String!
+  block: String!
+  action: String!
 }

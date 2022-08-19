@@ -1,16 +1,18 @@
 import { cosmos } from "@graphprotocol/graph-ts";
-import { Reward } from "../generated/schema";
+import { Event } from "../generated/schema";
 
-export function handleReward(data: cosmos.EventData): void {
-  const height = data.block.header.height;
+function messageId(data: cosmos.Header): string {
+  return `${data.hash.toHexString()}-${data.height.toString()}`;
+}
 
-  const amount = data.event.getAttributeValue("amount");
-  const validator = data.event.getAttributeValue("validator");
+export function handleEvent(data: cosmos.EventData): void {
+  let event = new Event(messageId(data.block.header));
+  event.type = data.event.eventType;
+  event.transaction = data.block.header.hash.toHexString();
+  event.block = data.block.header.height.toString();
+  
+  event.contract_address = data.event.getAttributeValue("_contract_address");
+  event.action = data.event.getAttributeValue("action");
 
-  let reward = new Reward(`${height}-${validator}`);
-
-  reward.amount = amount;
-  reward.validator = validator;
-
-  reward.save();
+  event.save();
 }

@@ -1,7 +1,7 @@
 {
-  "name": "cosmos-validator-rewards",
-  "version": "0.1.0",
-  "repository": "https://github.com/graphprotocol/example-subgraph",
+  "name": "cosmos-event-example",
+  "version": "0.1.1",
+  "repository": "https://github.com/nabaruns/example-subgraph",
   "license": "MIT",
   "scripts": {
     "prepare:cosmoshub": "mustache config/cosmoshub.json subgraph.template.yaml > subgraph.yaml",
@@ -9,16 +9,16 @@
     "prepare:persistence": "mustache config/persistence.json subgraph.template.yaml > subgraph.yaml",
     "codegen": "graph codegen",
     "build": "graph build",
-    "create-local": "graph create cosmos-validator-rewards --node http://0.0.0.0:8020",
-    "deploy-local": "graph deploy cosmos-validator-rewards -l v0.1.0 --ipfs http://0.0.0.0:5001 --node http://0.0.0.0:8020",
-    "remove-local": "graph remove cosmos-validator-rewards --node http://0.0.0.0:8020",
-    "create": "graph create cosmos-validator-rewards --node https://api.thegraph.com/deploy/",
-    "deploy": "graph deploy cosmos-validator-rewards --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
+    "create-local": "graph create cosmos-event-example --node http://0.0.0.0:8020",
+    "deploy-local": "graph deploy cosmos-event-example -l v0.1.1 --ipfs http://0.0.0.0:5001 --node http://0.0.0.0:8020",
+    "remove-local": "graph remove cosmos-event-example --node http://0.0.0.0:8020",
+    "create": "graph create cosmos-event-example --node https://api.thegraph.com/deploy/",
+    "deploy": "graph deploy cosmos-event-example --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
     "test": "npx ts-node query_client.ts"
   },
   "devDependencies": {
-    "@graphprotocol/graph-cli": "^0.30.0",
-    "@graphprotocol/graph-ts": "^0.27.0",
+    "@graphprotocol/graph-cli": "https://github.com/figment-networks/graph-cli.git#tendermint",
+    "@graphprotocol/graph-ts": "https://github.com/figment-networks/graph-ts.git#feature/GRAPH-306",
     "mustache": "^4.2.0",
     "graphql-request": "^4.3.0"
   },
