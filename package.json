@@ -17,8 +17,8 @@
     "test": "npx ts-node query_client.ts"
   },
   "devDependencies": {
-    "@graphprotocol/graph-cli": "https://github.com/figment-networks/graph-cli.git#tendermint",
-    "@graphprotocol/graph-ts": "https://github.com/figment-networks/graph-ts.git#feature/GRAPH-306",
+    "@graphprotocol/graph-cli": "^0.30.0",
+    "@graphprotocol/graph-ts": "^0.27.0",
     "mustache": "^4.2.0",
     "graphql-request": "^4.3.0"
   },
