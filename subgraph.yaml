@@ -14,7 +14,15 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - Event
+        - Tx
+        - LendingProtocol
+        - Market
+        - Token
+      # transactionHandlers:
+      #   - handler: handleTx
       eventHandlers:
         - event: wasm
           handler: handleEvent
+        - event: wasm-interests_updated
+          handler: handleAccrueInterest
       file: ./src/mapping.ts

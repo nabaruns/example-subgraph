@@ -23,6 +23,7 @@
     "graphql-request": "^4.3.0"
   },
   "dependencies": {
+    "as-proto": "^0.4.0",
     "babel-polyfill": "^6.26.0",
     "babel-register": "^6.26.0"
   }
