@@ -1,7 +1,7 @@
 import { cosmos, log, BigInt } from "@graphprotocol/graph-ts";
 import { Event, Market } from "../generated/schema";
 import { DAYS_PER_YEAR, MARKET_ADDRESS, PRICE_ORACLE1_ADDRESS } from "./constants";
-import {  getOrCreateProtocol, _handleMint, _handleMarketListed, eventId, snapshotMarket, snapshotFinancials, updateProtocol, updateMarket, getOrCreateCircularBuffer, _handleOracleFeed } from "./actions";
+import {  getOrCreateProtocol, _handleMint, _handleMarketListed, eventId, snapshotMarket, snapshotFinancials, updateProtocol, updateMarket, getOrCreateCircularBuffer, _handleOracleFeed, _handleBorrow, _handleRepayBorrow, _handleRedeem } from "./actions";
 
 export function handleEvent(data: cosmos.EventData): void {
   if (data.event.attributes[0].key == "_contract_address" &&
@@ -30,6 +30,15 @@ export function handleEvent(data: cosmos.EventData): void {
       }
       else if (event.action == "deposit") {
         _handleMint(data);
+      }
+      else if (event.action == "withdraw") {
+        _handleRedeem(data);
+      }
+      else if (event.action == "borrow") {
+        _handleBorrow(data);
+      }
+      else if (event.action == "repay") {
+        _handleRepayBorrow(data);
       }
     }
     event.save();

@@ -590,10 +590,10 @@ export function updateMarket(
   underlyingToken.save();
 
   // TODO: check
-  market.outputTokenSupply = supplyExchangeRate
-    .times(market.inputTokenBalance.toBigDecimal())
-    .truncate(0)
-    .digits;
+  // market.outputTokenSupply = supplyExchangeRate
+  //   .times(market.inputTokenBalance.toBigDecimal())
+  //   .truncate(0)
+  //   .digits;
 
   // get correct outputTokenDecimals for generic exchangeRate calculation
   let outputTokenDecimals = pTokenDecimals;
@@ -607,9 +607,7 @@ export function updateMarket(
       outputTokenDecimals = outputToken.decimals;
     }
   }
-
-  
-
+  market.exchangeRate = supplyExchangeRate;
   market.outputTokenPriceUSD = supplyExchangeRate.times(
     market.inputTokenPriceUSD
   );
