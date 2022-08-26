@@ -1,11 +1,12 @@
 import { cosmos, log, BigInt } from "@graphprotocol/graph-ts";
 import { Event, Market } from "../generated/schema";
-import { DAYS_PER_YEAR, MARKET_ADDRESS } from "./constants";
-import {  getOrCreateProtocol, _handleMint, _handleMarketListed, eventId, snapshotMarket, snapshotFinancials, updateProtocol, updateMarket, getOrCreateCircularBuffer } from "./actions";
+import { DAYS_PER_YEAR, MARKET_ADDRESS, PRICE_ORACLE1_ADDRESS } from "./constants";
+import {  getOrCreateProtocol, _handleMint, _handleMarketListed, eventId, snapshotMarket, snapshotFinancials, updateProtocol, updateMarket, getOrCreateCircularBuffer, _handleOracleFeed } from "./actions";
 
 export function handleEvent(data: cosmos.EventData): void {
   if (data.event.attributes[0].key == "_contract_address" &&
-    data.event.attributes[0].value == MARKET_ADDRESS) {
+    data.event.attributes[0].value == MARKET_ADDRESS || 
+    data.event.attributes[0].value == PRICE_ORACLE1_ADDRESS) {
 
     let event = new Event(eventId(data));
     event.event_type = data.event.eventType;
@@ -21,7 +22,11 @@ export function handleEvent(data: cosmos.EventData): void {
         _handleMarketListed(protocol, data);
       }
       else if (event.action == "feed_prices") {
-        _handleOracleFeed(data);
+        for (let i = 0; i < data.event.attributes.length; i++) {
+          if (data.event.attributes[i].key == "asset") {
+            _handleOracleFeed(data, i);
+          }
+        }
       }
       else if (event.action == "deposit") {
         _handleMint(data);

@@ -8,14 +8,6 @@ type Event @entity {
   action: String
 }
 
-# type Tx @entity {
-#   id: ID!
-#   sender: String!
-#   contract: String!
-#   message: String
-#   hash: String!
-# }
-
 enum Network {
   PERSISTENCE
   TESTCORE
@@ -48,6 +40,23 @@ type Token @entity {
 
   " Optional field to track the block number of the last token price "
   lastPriceBlockNumber: BigInt
+}
+
+type FeedPrice @entity {
+  " { Transaction hash }-{ Log index } "
+  id: ID!
+
+  " Protocol this snapshot is associated with "
+  protocol: LendingProtocol!
+
+  " Block number of this event "
+  blockNumber: BigInt!
+
+  " Timestamp of this event "
+  timestamp: BigInt!
+
+  " Price of token "
+  tokenPriceUSD: BigDecimal!
 }
 
 enum RewardTokenType {

@@ -734,7 +734,6 @@ export function updateAllMarketPrices(
     ]);
     return;
   }
-  let priceOracle = protocol._priceOracle;
 
   for (let i = 0; i < protocol._marketIDs.length; i++) {
     let market = Market.load(protocol._marketIDs[i]);

@@ -18,8 +18,7 @@ dataSources:
         - LendingProtocol
         - Market
         - Token
-      # transactionHandlers:
-      #   - handler: handleTx
+        - FeedPrice
       eventHandlers:
         - event: wasm
           handler: handleEvent

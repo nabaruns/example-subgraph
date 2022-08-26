@@ -1,6 +1,6 @@
 import { cosmos, BigInt } from "@graphprotocol/graph-ts";
 import { snapshotFinancials, snapshotMarket } from ".";
-import { Token, Market, LendingProtocol, InterestRate } from "../../generated/schema";
+import { Token, Market, LendingProtocol, InterestRate, FeedPrice } from "../../generated/schema";
 import { BIGDECIMAL_ZERO, BIGINT_ZERO, InterestRateSide, InterestRateType, INT_ZERO, LendingType, LIQUIDATION_ADDRESS, MARKET_ADDRESS, METHODOLOGY_VERSION, Network, PRICE_ORACLE1_ADDRESS, ProtocolType, PROTOCOL_NAME, PROTOCOL_SLUG, pTokenDecimals, RiskType, SCHEMA_VERSION, SUBGRAPH_VERSION } from "../constants";
 
 export class ProtocolData {
@@ -113,6 +113,11 @@ export function _handleMarketListed(protocol: LendingProtocol, data: cosmos.Even
     market.cumulativeProtocolSideRevenueUSD = BIGDECIMAL_ZERO;
     market.cumulativeTotalRevenueUSD = BIGDECIMAL_ZERO;
     market._borrowBalance = BIGINT_ZERO;
+
+    let feedPrice = FeedPrice.load(pTokenAddr);
+    if (feedPrice != null) {
+        market.inputTokenPriceUSD = feedPrice.tokenPriceUSD;
+    }
 
     market.save();
 
