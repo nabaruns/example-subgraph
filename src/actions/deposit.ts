@@ -1,21 +1,21 @@
 import { cosmos, log, BigInt } from "@graphprotocol/graph-ts";
-import { eventId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
+import { eventActionId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
 import { Deposit, LendingProtocol, Market, Token } from "../../generated/schema";
-import { EventType, exponentToBigDecimal, MARKET_ADDRESS } from "../constants";
+import { EventType, exponentToBigDecimal, PROTOCOL_ADDRESS } from "../constants";
 
 export function _handleMint(data: cosmos.EventData): void {
   let event = data.event;
   const mintAmount = BigInt.fromString(event.getAttributeValue("amount"));
-  const minter = event.getAttributeValue("user");
+  const minter = event.getAttributeValue("to");
 
-  let protocol = LendingProtocol.load(MARKET_ADDRESS);
+  let protocol = LendingProtocol.load(PROTOCOL_ADDRESS);
   if (!protocol) {
     log.warning("[handleMint] protocol not found: {}", [
-      MARKET_ADDRESS,
+      PROTOCOL_ADDRESS,
     ]);
     return;
   }
-  let marketID = event.getAttributeValue("asset");
+  let marketID = data.event.getAttributeValue("_contract_address");
   let market = Market.load(marketID);
   if (!market) {
     log.warning("[handleMint] Market not found: {}", [marketID]);
@@ -29,7 +29,7 @@ export function _handleMint(data: cosmos.EventData): void {
     return;
   }
 
-  let depositID = eventId(data);
+  let depositID = eventActionId(data);
   let deposit = new Deposit(depositID);
   deposit.hash = data.block.header.hash.toHexString();
   deposit.logIndex = BigInt.fromU64(data.block.header.height);
@@ -64,7 +64,7 @@ export function _handleMint(data: cosmos.EventData): void {
   );
 
   snapshotFinancials(
-      MARKET_ADDRESS,
+      PROTOCOL_ADDRESS,
       blockNumber,
       timestamp,
   );
@@ -77,7 +77,7 @@ export function _handleMint(data: cosmos.EventData): void {
   );
 
   snapshotUsage(
-    MARKET_ADDRESS,
+    PROTOCOL_ADDRESS,
     deposit.blockNumber,
     deposit.timestamp ,
     minter,

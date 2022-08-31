@@ -1,11 +1,10 @@
-import { cosmos, BigInt } from "@graphprotocol/graph-ts";
-import { snapshotFinancials, snapshotMarket } from ".";
+import { cosmos, BigInt, log } from "@graphprotocol/graph-ts";
 import { Token, Market, LendingProtocol, InterestRate, FeedPrice } from "../../generated/schema";
-import { BIGDECIMAL_ZERO, BIGINT_ZERO, InterestRateSide, InterestRateType, INT_ZERO, LendingType, LIQUIDATION_ADDRESS, MARKET_ADDRESS, METHODOLOGY_VERSION, Network, PRICE_ORACLE1_ADDRESS, ProtocolType, PROTOCOL_NAME, PROTOCOL_SLUG, pTokenDecimals, RiskType, SCHEMA_VERSION, SUBGRAPH_VERSION } from "../constants";
+import { BIGDECIMAL_ZERO, BIGINT_ZERO, InterestRateSide, InterestRateType, INT_ZERO, LendingType, LIQUIDATION_ADDRESS, PROTOCOL_ADDRESS, METHODOLOGY_VERSION, Network, PRICE_ORACLE1_ADDRESS, ProtocolType, PROTOCOL_NAME, PROTOCOL_SLUG, pTokenDecimals, RiskType, SCHEMA_VERSION, SUBGRAPH_VERSION, pTokenAddrMap } from "../constants";
 
 export class ProtocolData {
     constructor(
-        public readonly marketAddr: string,
+        public readonly protocolAddr: string,
         public readonly name: string,
         public readonly slug: string,
         public readonly schemaVersion: string,
@@ -28,8 +27,12 @@ export class TokenData {
 
 export function _handleMarketListed(protocol: LendingProtocol, data: cosmos.EventData): void {
     let event = data.event;
+    let asset = event.getAttributeValue("asset");
 
-    let pTokenAddr = event.getAttributeValue("asset");
+    if (!pTokenAddrMap.has(asset)){
+        return;
+    }
+    let pTokenAddr = pTokenAddrMap.get(asset);
     let pToken = Token.load(pTokenAddr);
     if (pToken != null) {
         return;
@@ -40,17 +43,17 @@ export function _handleMarketListed(protocol: LendingProtocol, data: cosmos.Even
     // create pToken
     //
     pToken = new Token(pTokenAddr);
-    pToken.name = event.getAttributeValue("asset");
-    pToken.symbol = event.getAttributeValue("asset");
+    pToken.name = asset;
+    pToken.symbol = asset;
     pToken.decimals = pTokenDecimals;
     pToken.save();
 
     //
     // create underlying token
     //
-    let underlyingToken = new Token(event.getAttributeValue("asset"));
-    underlyingToken.name = event.getAttributeValue("asset");
-    underlyingToken.symbol = event.getAttributeValue("asset");
+    let underlyingToken = new Token(asset);
+    underlyingToken.name = asset;
+    underlyingToken.symbol = asset;
     underlyingToken.decimals = pTokenDecimals;
     underlyingToken.save();
 
@@ -135,10 +138,10 @@ export function _getOrCreateProtocol(
     protocolData: ProtocolData
 ): LendingProtocol {
     let protocol = LendingProtocol.load(
-        protocolData.marketAddr
+        protocolData.protocolAddr
     );
     if (!protocol) {
-        protocol = new LendingProtocol(protocolData.marketAddr);
+        protocol = new LendingProtocol(protocolData.protocolAddr);
         protocol.name = protocolData.name;
         protocol.slug = protocolData.slug;
         protocol.schemaVersion = protocolData.schemaVersion;
@@ -176,7 +179,7 @@ export function _getOrCreateProtocol(
 
 export function getOrCreateProtocol(): LendingProtocol {
     let protocolData = new ProtocolData(
-        MARKET_ADDRESS,
+        PROTOCOL_ADDRESS,
         PROTOCOL_NAME,
         PROTOCOL_SLUG,
         SCHEMA_VERSION,

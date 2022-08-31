@@ -1,6 +1,6 @@
-import { cosmos, log, BigInt, BigDecimal, Address, dataSource } from "@graphprotocol/graph-ts";
+import { cosmos, log, BigInt, BigDecimal, dataSource } from "@graphprotocol/graph-ts";
 import { Account, ActiveAccount, FinancialsDailySnapshot, InterestRate, LendingProtocol, Market, MarketDailySnapshot, MarketHourlySnapshot, Token, UsageMetricsDailySnapshot, UsageMetricsHourlySnapshot, _CircularBuffer } from "../../generated/schema";
-import { ActivityType, BIGDECIMAL_HUNDRED, BIGDECIMAL_ZERO, EventType, exponentToBigDecimal, INT_NEGATIVE_ONE, INT_ONE, INT_TWO, INT_ZERO, mantissaFactor, mantissaFactorBD, pTokenDecimals, SECONDS_PER_DAY, SECONDS_PER_HOUR, SubgraphNetwork } from "../constants";
+import { ActivityType, BIGDECIMAL_HUNDRED, BIGDECIMAL_ZERO, EventType, exponentToBigDecimal, INT_NEGATIVE_ONE, INT_ONE, INT_TWO, INT_ZERO, pTokenDecimals, SECONDS_PER_DAY, SECONDS_PER_HOUR, SubgraphNetwork } from "../constants";
 
 export class UpdateMarketData {
   constructor(
@@ -11,8 +11,12 @@ export class UpdateMarketData {
   ) {}
 }
 
-export function eventId(data: cosmos.EventData): string {
-  return `${data.block.header.hash.toHexString()}-${data.block.header.height.toString()}-${data.event.eventType}`;
+export function eventActionId(data: cosmos.EventData): string {
+  return `${data.block.header.hash.toHexString()}-${data.block.header.height.toString()}-${data.event.eventType}-${data.event.attributes[1].value}`;
+}
+
+export function eventInterestId(data: cosmos.EventData): string {
+  return `${data.block.header.hash.toHexString()}-${data.block.header.height.toString()}-${data.event.eventType}-${data.event.getAttributeValue("asset")}`;
 }
 
 export function snapshotMarket(
@@ -133,13 +137,13 @@ function getSnapshotRates(rates: string[], timeSuffix: string): string[] {
  * @param accountID
  */
 export function snapshotUsage(
-  MARKET_ADDRESS: string,
+  PROTOCOL_ADDRESS: string,
   blockNumber: BigInt,
   blockTimestamp: BigInt,
   accountID: string,
   eventType: EventType
 ): void {
-  let protocol = LendingProtocol.load(MARKET_ADDRESS);
+  let protocol = LendingProtocol.load(PROTOCOL_ADDRESS);
   if (!protocol) {
     log.error("[snapshotUsage] Protocol not found, this SHOULD NOT happen", []);
     return;

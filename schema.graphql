@@ -6,6 +6,8 @@ type Event @entity {
   block_height: String!
   block_time: String!
   action: String
+  amount: String
+  asset: String
 }
 
 enum Network {

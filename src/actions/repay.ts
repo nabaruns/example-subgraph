@@ -1,21 +1,22 @@
 import { cosmos, log, BigInt } from "@graphprotocol/graph-ts";
-import { eventId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
+import { eventActionId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
 import { Repay, LendingProtocol, Market, Token } from "../../generated/schema";
-import { EventType, exponentToBigDecimal, MARKET_ADDRESS } from "../constants";
+import { EventType, exponentToBigDecimal, PROTOCOL_ADDRESS, pTokenAddrMap } from "../constants";
 
 export function _handleRepayBorrow(data: cosmos.EventData): void {
   let event = data.event;
   const repayAmount = BigInt.fromString(event.getAttributeValue("amount"));
   const repayer = event.getAttributeValue("sender");
+  const asset = event.getAttributeValue("asset");
 
-  let protocol = LendingProtocol.load(MARKET_ADDRESS);
+  let protocol = LendingProtocol.load(PROTOCOL_ADDRESS);
   if (!protocol) {
-    log.warning("[_handleRepayBorrow] protocol not found: {}", [
-      MARKET_ADDRESS,
+    log.warning("[_handleRedeem] protocol not found: {}", [
+      PROTOCOL_ADDRESS,
     ]);
     return;
   }
-  let marketID = event.getAttributeValue("asset");
+  let marketID = pTokenAddrMap.get(asset);
   let market = Market.load(marketID);
   if (!market) {
     log.warning("[_handleRepayBorrow] Market not found: {}", [marketID]);
@@ -29,7 +30,7 @@ export function _handleRepayBorrow(data: cosmos.EventData): void {
     return;
   }
 
-  let repayID = eventId(data);
+  let repayID = eventActionId(data);
   let repay = new Repay(repayID);
   repay.hash = data.block.header.hash.toHexString();
   repay.logIndex = BigInt.fromU64(data.block.header.height);
@@ -49,7 +50,6 @@ export function _handleRepayBorrow(data: cosmos.EventData): void {
   repay.amountUSD = repayUSD;
   repay.save();
 
-  market.cumulativeBorrowUSD = market.cumulativeBorrowUSD.minus(repayUSD);
   market.save();
 
   const timestamp = BigInt.fromString(data.block.header.time.seconds.toString());
@@ -63,7 +63,7 @@ export function _handleRepayBorrow(data: cosmos.EventData): void {
   );
 
   snapshotFinancials(
-      MARKET_ADDRESS,
+      PROTOCOL_ADDRESS,
       blockNumber,
       timestamp,
   );
@@ -76,7 +76,7 @@ export function _handleRepayBorrow(data: cosmos.EventData): void {
   );
 
   snapshotUsage(
-    MARKET_ADDRESS,
+    PROTOCOL_ADDRESS,
     repay.blockNumber,
     repay.timestamp ,
     repayer,

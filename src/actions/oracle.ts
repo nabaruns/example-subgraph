@@ -1,19 +1,22 @@
 import { cosmos, log, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
-import { eventId, getOrCreateCircularBuffer, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarket, updateMarketSnapshots, updateProtocol } from ".";
-import { Deposit, FeedPrice, LendingProtocol, Market, Token } from "../../generated/schema";
-import { DAYS_PER_YEAR, EventType, exponentToBigDecimal, MARKET_ADDRESS } from "../constants";
+import { snapshotFinancials, snapshotMarket, updateAllMarketPrices, updateProtocol } from ".";
+import { FeedPrice, LendingProtocol, Market } from "../../generated/schema";
+import { PROTOCOL_ADDRESS, pTokenAddrMap } from "../constants";
 
 export function _handleOracleFeed(data: cosmos.EventData, i: i32): void {
-    let event = data.event;
-
-    let protocol = LendingProtocol.load(MARKET_ADDRESS);
+    let protocol = LendingProtocol.load(PROTOCOL_ADDRESS);
     if (!protocol) {
       log.warning("[_handleOracleFeed] protocol not found: {}", [
-        MARKET_ADDRESS,
+        PROTOCOL_ADDRESS,
       ]);
       return;
     }
-    let marketID = data.event.attributes[i].value;
+
+    const asset = data.event.attributes[i].value;
+    if (!pTokenAddrMap.has(asset)) {
+      return;
+    }
+    let marketID = pTokenAddrMap.get(asset);
     let market = Market.load(marketID);
     if (!market) {
       log.warning("[_handleOracleFeed] Market not found: {}", [marketID]);
@@ -42,11 +45,11 @@ export function _handleOracleFeed(data: cosmos.EventData, i: i32): void {
         timestamp
         );
 
-        updateAllMarketPrices(MARKET_ADDRESS, blockNumber);
-        updateProtocol(MARKET_ADDRESS);
+        updateAllMarketPrices(PROTOCOL_ADDRESS, blockNumber);
+        updateProtocol(PROTOCOL_ADDRESS);
 
         snapshotFinancials(
-        MARKET_ADDRESS,
+        PROTOCOL_ADDRESS,
         blockNumber,
         timestamp,
         );

@@ -1,4 +1,4 @@
-import { BigDecimal, BigInt, Address } from "@graphprotocol/graph-ts";
+import { BigDecimal, BigInt, TypedMap } from "@graphprotocol/graph-ts";
 
 export enum EventType {
   InitAsset,
@@ -68,19 +68,28 @@ export namespace SubgraphNetwork {
 /////   Chain Addresses  /////
 //////////////////////////////
 
-export const MARKET_ADDRESS = "persistence17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgsxzejz5";
+export const PROTOCOL_ADDRESS = "persistence17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgsxzejz5";
 export const PRICE_ORACLE1_ADDRESS =
   "persistence1wkwy0xh89ksdgj9hr347dyd2dw7zesmtrue6kfzyml4vdtz6e5wsmt95up";
 export const LIQUIDATION_ADDRESS =
   "persistence1wkwy0xh89ksdgj9hr347dyd2dw7zesmtrue6kfzyml4vdtz6e5wsmt95up";
-export const SAI_ADDRESS = "";
-export const USDC_ADDRESS = "";
-export const CUSDC_ADDRESS = "";
-export const CETH_ADDRESS = "";
-export const COMP_ADDRESS = "";
-export const CCOMP_ADDRESS = "";
-export const CUSDT_ADDRESS = "";
-export const CTUSD_ADDRESS = "";
+
+export const pTokenAddrMap = new Map<string,string>()
+  .set(
+    "persistence1yw4xvtc43me9scqfr2jr2gzvcxd3a9y4eq7gaukreugw2yd2f8tspuerpk",
+    "persistence1eyfccmjm6732k7wp4p6gdjwhxjwsvje44j0hfx8nkgrm8fs7vqfsprtd9y")
+  .set(
+    "uxprt",
+    "persistence1j08452mqwadp8xu25kn9rleyl2gufgfjnv0sn8dvynynakkjukcqjhs8pv")
+  .set(
+    "ibc/5EB63C96C44E329E2EBEFC269488F1062E8AD88D0F5D168F0411873869924E37",
+    "persistence1c2f79k5kykr5s4zhknn5w56hs5c9a8zxh4w03x07dnzwyrcj4pfsxls8hk")
+  .set(
+    "ibc/E6B90AEE10E8AD18AB0AFECF2E361C1950BEFA0C2B4DA8F8ED40735CA639BEE9",
+    "persistence1e8h0sk0a2f56hgnj3qzj845hzar9xljzumv2z9c8ze3sy8n5x2tq6373nf")
+  .set(
+    "ibc/D1283F23CC25C39F16BCFB2DFFA9997AE7A101B92810D0F9F0AA092F6FE332D0",
+    "persistence13h9k5rsrgveg6sdtzg34qg499ns0e5kku74kapnskegtwyfspf6qaf3eg6");
 
 /////////////////////////////
 ///// Protocol Specific /////

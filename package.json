@@ -17,10 +17,10 @@
     "test": "npx ts-node query_client.ts"
   },
   "devDependencies": {
-    "@graphprotocol/graph-cli": "^0.30.0",
+    "@graphprotocol/graph-cli": "^0.30.2",
     "@graphprotocol/graph-ts": "^0.27.0",
     "mustache": "^4.2.0",
-    "graphql-request": "^4.3.0"
+    "source-map-support": "^0.5.21"
   },
   "dependencies": {
     "as-proto": "^0.4.0",

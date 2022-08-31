@@ -1,21 +1,22 @@
 import { cosmos, log, BigInt } from "@graphprotocol/graph-ts";
-import { eventId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
+import { eventActionId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
 import { Borrow, LendingProtocol, Market, Token } from "../../generated/schema";
-import { EventType, exponentToBigDecimal, MARKET_ADDRESS } from "../constants";
+import { EventType, exponentToBigDecimal, PROTOCOL_ADDRESS, pTokenAddrMap } from "../constants";
 
 export function _handleBorrow(data: cosmos.EventData): void {
   let event = data.event;
   const borrowAmount = BigInt.fromString(event.getAttributeValue("amount"));
   const borrower = event.getAttributeValue("sender");
+  const asset = event.getAttributeValue("asset");
 
-  let protocol = LendingProtocol.load(MARKET_ADDRESS);
+  let protocol = LendingProtocol.load(PROTOCOL_ADDRESS);
   if (!protocol) {
-    log.warning("[_handleBorrow] protocol not found: {}", [
-      MARKET_ADDRESS,
+    log.warning("[_handleRedeem] protocol not found: {}", [
+      PROTOCOL_ADDRESS,
     ]);
     return;
   }
-  let marketID = event.getAttributeValue("asset");
+  let marketID = pTokenAddrMap.get(asset);
   let market = Market.load(marketID);
   if (!market) {
     log.warning("[_handleBorrow] Market not found: {}", [marketID]);
@@ -29,7 +30,7 @@ export function _handleBorrow(data: cosmos.EventData): void {
     return;
   }
 
-  let borrowID = eventId(data);
+  let borrowID = eventActionId(data);
   let borrow = new Borrow(borrowID);
   borrow.hash = data.block.header.hash.toHexString();
   borrow.logIndex = BigInt.fromU64(data.block.header.height);
@@ -63,7 +64,7 @@ export function _handleBorrow(data: cosmos.EventData): void {
   );
 
   snapshotFinancials(
-      MARKET_ADDRESS,
+      PROTOCOL_ADDRESS,
       blockNumber,
       timestamp,
   );
@@ -76,7 +77,7 @@ export function _handleBorrow(data: cosmos.EventData): void {
   );
 
   snapshotUsage(
-    MARKET_ADDRESS,
+    PROTOCOL_ADDRESS,
     borrow.blockNumber,
     borrow.timestamp ,
     borrower,

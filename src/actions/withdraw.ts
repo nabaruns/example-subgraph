@@ -1,21 +1,22 @@
 import { cosmos, log, BigInt } from "@graphprotocol/graph-ts";
-import { eventId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
+import { eventActionId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
 import { LendingProtocol, Market, Token, Withdraw } from "../../generated/schema";
-import { EventType, exponentToBigDecimal, MARKET_ADDRESS } from "../constants";
+import { EventType, exponentToBigDecimal, PROTOCOL_ADDRESS, pTokenAddrMap } from "../constants";
 
 export function _handleRedeem(data: cosmos.EventData): void {
   let event = data.event;
   const redeemAmount = BigInt.fromString(event.getAttributeValue("burn_amount"));
   const redeemer = event.getAttributeValue("user");
+  const asset = event.getAttributeValue("asset");
 
-  let protocol = LendingProtocol.load(MARKET_ADDRESS);
+  let protocol = LendingProtocol.load(PROTOCOL_ADDRESS);
   if (!protocol) {
     log.warning("[_handleRedeem] protocol not found: {}", [
-      MARKET_ADDRESS,
+      PROTOCOL_ADDRESS,
     ]);
     return;
   }
-  let marketID = event.getAttributeValue("asset");
+  let marketID = pTokenAddrMap.get(asset);
   let market = Market.load(marketID);
   if (!market) {
     log.warning("[_handleRedeem] Market not found: {}", [marketID]);
@@ -29,7 +30,7 @@ export function _handleRedeem(data: cosmos.EventData): void {
     return;
   }
 
-  let withdrawID = eventId(data);
+  let withdrawID = eventActionId(data);
   let withdraw = new Withdraw(withdrawID);
   withdraw.hash = data.block.header.hash.toHexString();
   withdraw.logIndex = BigInt.fromU64(data.block.header.height);
@@ -63,7 +64,7 @@ export function _handleRedeem(data: cosmos.EventData): void {
   );
 
   snapshotFinancials(
-      MARKET_ADDRESS,
+      PROTOCOL_ADDRESS,
       blockNumber,
       timestamp,
   );
@@ -76,7 +77,7 @@ export function _handleRedeem(data: cosmos.EventData): void {
   );
 
   snapshotUsage(
-    MARKET_ADDRESS,
+    PROTOCOL_ADDRESS,
     withdraw.blockNumber,
     withdraw.timestamp ,
     redeemer,

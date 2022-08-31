@@ -1,56 +1,72 @@
 import { cosmos, log, BigInt } from "@graphprotocol/graph-ts";
 import { Event, Market } from "../generated/schema";
-import { DAYS_PER_YEAR, MARKET_ADDRESS, PRICE_ORACLE1_ADDRESS } from "./constants";
-import {  getOrCreateProtocol, _handleMint, _handleMarketListed, eventId, snapshotMarket, snapshotFinancials, updateProtocol, updateMarket, getOrCreateCircularBuffer, _handleOracleFeed, _handleBorrow, _handleRepayBorrow, _handleRedeem } from "./actions";
+import { DAYS_PER_YEAR, PROTOCOL_ADDRESS, PRICE_ORACLE1_ADDRESS, pTokenAddrMap } from "./constants";
+import {  getOrCreateProtocol, _handleMint, _handleMarketListed, eventActionId, snapshotMarket, snapshotFinancials, updateProtocol, updateMarket, getOrCreateCircularBuffer, _handleOracleFeed, _handleBorrow, _handleRepayBorrow, _handleRedeem, eventInterestId } from "./actions";
 
 export function handleEvent(data: cosmos.EventData): void {
-  if (data.event.attributes[0].key == "_contract_address" &&
-    data.event.attributes[0].value == MARKET_ADDRESS || 
-    data.event.attributes[0].value == PRICE_ORACLE1_ADDRESS) {
-
-    let event = new Event(eventId(data));
-    event.event_type = data.event.eventType;
-    event.block_hash = data.block.header.hash.toHexString();
-    event.block_height = data.block.header.height.toString();
-    event.block_time = data.block.header.time.seconds.toString();
-    event.contract_address = data.event.attributes[0].value;
-
+  if (data.event.attributes[0].key == "_contract_address") {
     if (data.event.attributes[1].key == "action") {
-      event.action = data.event.attributes[1].value;
-      if (event.action == "init_asset") {
+      let contract_address = data.event.attributes[0].value;
+      let action = data.event.attributes[1].value;
+      let asset = "";
+      let amount = "";
+
+      if (contract_address == PROTOCOL_ADDRESS && action == "init_asset") {
         let protocol = getOrCreateProtocol();
         _handleMarketListed(protocol, data);
       }
-      else if (event.action == "feed_prices") {
+      else if (contract_address == PRICE_ORACLE1_ADDRESS && action == "feed_prices") {
+        // Iterate over multiple asset feed prices
         for (let i = 0; i < data.event.attributes.length; i++) {
           if (data.event.attributes[i].key == "asset") {
             _handleOracleFeed(data, i);
+            asset = data.event.attributes[i].value;
+            amount = data.event.attributes[i+1].value;
           }
         }
       }
-      else if (event.action == "deposit") {
+      else if (action == "mint") {
+        // This event happens at the pToken contract
         _handleMint(data);
+        amount = data.event.getAttributeValue("amount");
+        asset = data.event.getAttributeValue("_contract_address");
       }
-      else if (event.action == "withdraw") {
+      else if (contract_address == PROTOCOL_ADDRESS && action == "withdraw") {
+        // This event happens at the BL contract
         _handleRedeem(data);
+        let asset = data.event.getAttributeValue("asset");
+        asset = pTokenAddrMap.get(asset);
+        amount = data.event.getAttributeValue("burn_amount");
       }
-      else if (event.action == "borrow") {
+      else if (contract_address == PROTOCOL_ADDRESS && action == "borrow") {
+        // This event happens at the BL contract
         _handleBorrow(data);
       }
-      else if (event.action == "repay") {
+      else if (contract_address == PROTOCOL_ADDRESS && action == "repay") {
+        // This event happens at the BL contract
         _handleRepayBorrow(data);
+      } else {
+        return;
       }
+
+      let event = new Event(eventActionId(data));
+      event.event_type = data.event.eventType;
+      event.block_hash = data.block.header.hash.toHexString();
+      event.block_height = data.block.header.height.toString();
+      event.block_time = data.block.header.time.seconds.toString();
+      event.contract_address = contract_address;
+      event.action = action;
+      event.asset = asset;
+      event.amount = amount;
+      event.save();
     }
-    event.save();
   }
 }
 
 export function handleAccrueInterest(data: cosmos.EventData): void {
   const contract_address = data.event.getAttributeValue("_contract_address");
-  if (contract_address == MARKET_ADDRESS) {
-    log.info("[{}] {}",[data.event.eventType, data.event.getAttributeValue("asset")]);
-
-    let event = new Event(eventId(data));
+  if (contract_address == PROTOCOL_ADDRESS) {
+    let event = new Event(eventInterestId(data));
     event.event_type = data.event.eventType;
     event.block_hash = data.block.header.hash.toHexString();
     event.block_height = data.block.header.height.toString();
@@ -59,7 +75,8 @@ export function handleAccrueInterest(data: cosmos.EventData): void {
     event.action = data.event.getAttributeValue("asset");
     event.save();
 
-    let marketID = data.event.getAttributeValue("asset");
+    let asset = data.event.getAttributeValue("asset");
+    let marketID = pTokenAddrMap.get(asset);
     let market = Market.load(marketID);
     if (!market) {
       log.warning("[handleAccrueInterest] Market not found: {}", [marketID]);
@@ -86,13 +103,13 @@ export function handleAccrueInterest(data: cosmos.EventData): void {
       blockNumber,
       timestamp,
       false,
-      MARKET_ADDRESS,
+      PROTOCOL_ADDRESS,
       blocksPerDay * DAYS_PER_YEAR
     );
-    updateProtocol(MARKET_ADDRESS);
+    updateProtocol(PROTOCOL_ADDRESS);
 
     snapshotFinancials(
-      MARKET_ADDRESS,
+      PROTOCOL_ADDRESS,
       blockNumber,
       timestamp,
     );
