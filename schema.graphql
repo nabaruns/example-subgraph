@@ -126,6 +126,9 @@ type InterestRate @entity {
   " Interest rate in percentage APY. E.g. 5.21% should be stored as 5.21 "
   rate: BigDecimal!
 
+  " Interest rate in percentage. E.g. 5.21% should be stored as 5.21 "
+  rate_block: BigDecimal!
+
   " Duration of the loan in days. Only applies to fixed term lending (e.g. Notional) "
   duration: Int
 
@@ -552,6 +555,9 @@ type Market @entity {
   " Amount of input token per full share of output token. Only applies when the output token exists (note this is a ratio and not a percentage value, i.e. 1.05 instead of 105%) "
   exchangeRate: BigDecimal
 
+  " Amount of input token per full share of output token. Only applies when the output token exists (note this is a ratio and not a percentage value, i.e. 1.05 instead of 105%) "
+  borrowExchangeRate: BigDecimal!
+
   " Per-block reward token emission as of the current block normalized to a day, in token's native amount. This should be ideally calculated as the theoretical rate instead of the realized amount. "
   rewardTokenEmissionsAmount: [BigInt!]
 
@@ -593,7 +599,7 @@ type Market @entity {
   _reserveFactor: BigDecimal!
 
   " The amount of borrowed asset in underlying "
-  _borrowBalance: BigInt!
+  _borrowBalance: BigDecimal!
 }
 
 #################################

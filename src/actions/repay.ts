@@ -1,7 +1,7 @@
 import { cosmos, log, BigInt } from "@graphprotocol/graph-ts";
 import { eventActionId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
 import { Repay, LendingProtocol, Market, Token } from "../../generated/schema";
-import { EventType, exponentToBigDecimal, PROTOCOL_ADDRESS, pTokenAddrMap } from "../constants";
+import { BIGINT_TEN_TO_SIXTH, EventType, exponentToBigDecimal, PROTOCOL_ADDRESS, pTokenAddrMap } from "../constants";
 
 export function _handleRepayBorrow(data: cosmos.EventData): void {
   let event = data.event;
@@ -50,6 +50,12 @@ export function _handleRepayBorrow(data: cosmos.EventData): void {
   repay.amountUSD = repayUSD;
   repay.save();
 
+  market._borrowBalance = market._borrowBalance
+    .minus(repayAmount
+      .divDecimal(market.borrowExchangeRate)
+      .times(BIGINT_TEN_TO_SIXTH.toBigDecimal())
+      .truncate(0)
+    );
   market.save();
 
   const timestamp = BigInt.fromString(data.block.header.time.seconds.toString());

@@ -1,7 +1,7 @@
 import { cosmos, log, BigInt } from "@graphprotocol/graph-ts";
 import { eventActionId, snapshotFinancials, snapshotMarket, snapshotUsage, updateAllMarketPrices, updateMarketSnapshots, updateProtocol } from ".";
 import { Borrow, LendingProtocol, Market, Token } from "../../generated/schema";
-import { EventType, exponentToBigDecimal, PROTOCOL_ADDRESS, pTokenAddrMap } from "../constants";
+import { BIGINT_TEN_TO_SIXTH, EventType, exponentToBigDecimal, PROTOCOL_ADDRESS, pTokenAddrMap, pTokenDecimals } from "../constants";
 
 export function _handleBorrow(data: cosmos.EventData): void {
   let event = data.event;
@@ -50,6 +50,12 @@ export function _handleBorrow(data: cosmos.EventData): void {
   borrow.amountUSD = borrowUSD;
   borrow.save();
 
+  market._borrowBalance = market._borrowBalance
+    .plus(borrowAmount
+      .divDecimal(market.borrowExchangeRate)
+      .times(BIGINT_TEN_TO_SIXTH.toBigDecimal())
+      .truncate(0)
+    );
   market.cumulativeBorrowUSD = market.cumulativeBorrowUSD.plus(borrowUSD);
   market.save();
 

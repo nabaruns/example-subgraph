@@ -75,6 +75,7 @@ export function _handleMarketListed(protocol: LendingProtocol, data: cosmos.Even
     supplyInterestRate.side = InterestRateSide.LENDER;
     supplyInterestRate.type = InterestRateType.VARIABLE;
     supplyInterestRate.rate = BIGDECIMAL_ZERO;
+    supplyInterestRate.rate_block = BIGDECIMAL_ZERO;
     supplyInterestRate.save();
     let borrowInterestRate = new InterestRate(
         InterestRateSide.BORROWER.concat("-")
@@ -85,6 +86,7 @@ export function _handleMarketListed(protocol: LendingProtocol, data: cosmos.Even
     borrowInterestRate.side = InterestRateSide.BORROWER;
     borrowInterestRate.type = InterestRateType.VARIABLE;
     borrowInterestRate.rate = BIGDECIMAL_ZERO;
+    borrowInterestRate.rate_block = BIGDECIMAL_ZERO;
     borrowInterestRate.save();
     market.rates = [supplyInterestRate.id, borrowInterestRate.id];
 
@@ -112,10 +114,11 @@ export function _handleMarketListed(protocol: LendingProtocol, data: cosmos.Even
     market.outputTokenSupply = BIGINT_ZERO;
     market.outputTokenPriceUSD = BIGDECIMAL_ZERO;
     market.exchangeRate = BIGDECIMAL_ZERO;
+    market.borrowExchangeRate = BIGDECIMAL_ZERO;
     market.cumulativeSupplySideRevenueUSD = BIGDECIMAL_ZERO;
     market.cumulativeProtocolSideRevenueUSD = BIGDECIMAL_ZERO;
     market.cumulativeTotalRevenueUSD = BIGDECIMAL_ZERO;
-    market._borrowBalance = BIGINT_ZERO;
+    market._borrowBalance = BIGDECIMAL_ZERO;
 
     let feedPrice = FeedPrice.load(pTokenAddr);
     if (feedPrice != null) {

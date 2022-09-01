@@ -122,6 +122,7 @@ function getSnapshotRates(rates: string[], timeSuffix: string): string[] {
     snapshotRate.side = rate.side;
     snapshotRate.type = rate.type;
     snapshotRate.rate = rate.rate;
+    snapshotRate.rate_block = rate.rate_block;
     snapshotRate.save();
     snapshotRates.push(snapshotRateId);
   }
@@ -612,6 +613,7 @@ export function updateMarket(
     }
   }
   market.exchangeRate = supplyExchangeRate;
+  market.borrowExchangeRate = borrowExchangeRate;
   market.outputTokenPriceUSD = supplyExchangeRate.times(
     market.inputTokenPriceUSD
   );
@@ -655,17 +657,16 @@ export function updateMarket(
   market.totalDepositBalanceUSD = underlyingSupplyUSD;
 
   market.totalBorrowBalanceUSD = market._borrowBalance
-    .toBigDecimal()
     .div(exponentToBigDecimal(underlyingToken.decimals))
     .times(market.inputTokenPriceUSD);
-
   
   setSupplyInterestRate(
     marketID,
     convertRatePerUnitToAPY(
       supplyRateResult,
       unitPerYear
-    )
+    ),
+    supplyRateResult
   );
 
   setBorrowInterestRate(
@@ -673,7 +674,8 @@ export function updateMarket(
     convertRatePerUnitToAPY(
       borrowRateResult,
       unitPerYear
-    )
+    ),
+    borrowRateResult
   );
 
   let interestAccumulatedUSD = supplyRateResult
@@ -761,7 +763,6 @@ export function updateAllMarketPrices(
       .div(exponentToBigDecimal(underlyingToken.decimals))
       .times(underlyingTokenPriceUSD);
     market.totalBorrowBalanceUSD = market._borrowBalance
-      .toBigDecimal()
       .div(exponentToBigDecimal(underlyingToken.decimals))
       .times(underlyingTokenPriceUSD);
     market.totalValueLockedUSD = market.inputTokenBalance
@@ -784,21 +785,24 @@ export function convertRatePerUnitToAPY(
 
 export function setSupplyInterestRate(
   marketID: string,
-  rate: BigDecimal
+  rate: BigDecimal,
+  rate_block: BigDecimal
 ): void {
-  setInterestRate(marketID, rate, true);
+  setInterestRate(marketID, rate, rate_block, true);
 }
 
 export function setBorrowInterestRate(
   marketID: string,
-  rate: BigDecimal
+  rate: BigDecimal,
+  rate_block: BigDecimal
 ): void {
-  setInterestRate(marketID, rate, false);
+  setInterestRate(marketID, rate, rate_block, false);
 }
 
 function setInterestRate(
   marketID: string,
   rate: BigDecimal,
+  rate_block: BigDecimal,
   isSupply: boolean
 ): void {
   let market = Market.load(marketID);
@@ -830,9 +834,11 @@ function setInterestRate(
   }
   if (isSupply) {
     supplyInterestRate.rate = rate;
+    supplyInterestRate.rate_block = rate_block;
     supplyInterestRate.save();
   } else {
     borrowInterestRate.rate = rate;
+    borrowInterestRate.rate_block = rate_block;
     borrowInterestRate.save();
   }
   market.rates = [supplyInterestRateID, borrowInterestRateID];
